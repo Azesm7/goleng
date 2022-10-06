@@ -11,35 +11,32 @@ type User struct {
 	ID       int
 	RealName string `unpack:"-"`
 	Login    string
-	flags    int
+	Flags    int
 }
 
 func UnpackReflect(u interface{}, data []byte) error {
 	r := bytes.NewReader(data)       //считывание из бинарных данных date
 	val := reflect.ValueOf(u).Elem() // получаем внутрению структуру
 	for i := 0; i < val.NumField(); i++ {
-		valField := val.Field(i)                // получаем значение
-		typeFaild := val.Type().Field(i)        // получаем тип
-		if typeFaild.Tag.Get("unpack") == "-" { // если есть тег unpack
+		valueField := val.Field(i)              // получаем значение
+		typeField := val.Type().Field(i)        // получаем тип
+		if typeField.Tag.Get("unpack") == "-" { // если есть тег unpack
 			continue
 		}
-		switch typeFaild.Type.Kind() { // предстовление типа
+		switch typeField.Type.Kind() { // предстовление типа
 		case reflect.Int: // если содержит тип int
 			var value uint32                            // создаём переменую
 			binary.Read(r, binary.LittleEndian, &value) // считываем данные из буфера
-			valField.Set(reflect.ValueOf(int(value)))   // устанавливаем зпредставление тех данных которые нам нужны
+			valueField.Set(reflect.ValueOf(int(value))) // устанавливаем зпредставление тех данных которые нам нужны
 		case reflect.String: // если содержит тип string
-			var lenRaw uint32                            // создание переменой
-			binary.Read(r, binary.LittleEndian, &lenRaw) // считываем данные из буфера
-			dataRaw := make([]byte, lenRaw)
-			//создание слайса байт
-			binary.Read(r, binary.LittleEndian, &lenRaw) // читаю в него данные
-			valField.SetString(string(dataRaw))
-			//присвоение значение в поле структуры
+			var lenRaw uint32                             // создание переменой
+			binary.Read(r, binary.LittleEndian, &lenRaw)  // считываем данные из буфера
+			dataRaw := make([]byte, lenRaw)               //создание слайса байт
+			binary.Read(r, binary.LittleEndian, &dataRaw) // читаю в него данные
+			valueField.SetString(string(dataRaw))         //присвоение значение в поле структуры
 		default:
-			return fmt.Errorf("bad type: %v for faild %v", typeFaild.Type.Kind(), typeFaild.Name)
+			return fmt.Errorf("bad type: %v for field %v", typeField.Type.Kind(), typeField.Name)
 		}
-
 	}
 	return nil
 }
