@@ -38,4 +38,5 @@ func main() {
 		}
 		go conect(conn)
 	}
-}
+} 
+// telnet 127.0.0.1 8080
